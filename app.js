@@ -8,6 +8,11 @@ require(["esri/Map","esri/views/SceneView", "esri/layers/GraphicsLayer",
     function(Map, SceneView, GraphicsLayer, Graphic, Point,
             Polyline, Polygon, SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol,
             Circle, webMercatorUtils){
+        let startLat;
+        let startLon;
+        let endLat;
+        let endLon;
+        
         var map = new Map({
             basemap: "streets",
             ground: "world-elevation"
@@ -15,114 +20,140 @@ require(["esri/Map","esri/views/SceneView", "esri/layers/GraphicsLayer",
         var view = new SceneView({
             container: "viewDiv",     
             map: map,                 
-            scale: 50000000,          
-            camera: {
-                position: {
-                    x: -0.2,
-                    y: 51.4,
-                    z: 1266.7
-                },
-            heading: 0.34,
-            tilt: 83
-            } 
+            scale: 50000000    
+            // camera: {
+            //     position: {
+            //         x: -0.2,
+            //         y: 51.4,
+            //         z: 1266.7
+            //     }
+            // heading: 0.34,
+            // tilt: 83
+            //} 
         });
         
         //create graphics layer
         var graphicsLayer = new GraphicsLayer();
         map.add(graphicsLayer);
-
-        //marker point graphic
-        var marker = new Point({
-            x: -0.178,
-            y: 51.48791,
-            z: 1010
-        }),
-
-        markerSymbol = new SimpleMarkerSymbol({
-            color: [226, 40, 40],
-            outline: {
-                color: [255, 255, 255],
-                width: 5
-            }
-        });
-
-        var markerGraphic = new Graphic({
-            geometry: marker,
-            symbol: markerSymbol
-        });
-
         
-        //marker line graphic
-        var markerLine = new Polyline([
-            [-0.178, 51.48791, 0],
-            [-0.178, 51.48791, 1000]
-          ]),
 
-          markerLineSymbol = new SimpleLineSymbol({
-            color: [226, 40, 40],
-            width: 10
-          });
-
-        var markerLineGraphic = new Graphic({
-          geometry: markerLine,
-          symbol: markerLineSymbol
-        });
-
+        //add marker to map -- break these into one function call
+       //createMapMarker(-0.178, 51.48791);
         
-        //marker rings graphic
-        //first and last points need to be the same
-        var markerRings = new Polygon({
-            rings: [
-                [
-                    [-0.184, 51.48391, 400],
-                    [-0.184, 51.49091, 500],
-                    [-0.172, 51.49091, 500],
-                    [-0.172, 51.48391, 400],
-                    [-0.184, 51.48391, 400]
-                ], 
-                [
-                    [-0.184, 51.48391, 200],
-                    [-0.184, 51.49091, 300],
-                    [-0.172, 51.49091, 300],
-                    [-0.172, 51.48391, 200],
-                    [-0.184, 51.48391, 200]
-                ],
-                [
-                    [-0.184, 51.48391, 600],
-                    [-0.184, 51.49091, 700],
-                    [-0.172, 51.49091, 700],
-                    [-0.172, 51.48391, 600],
-                    [-0.184, 51.48391, 600]
-                ]
-            ]
-        }),
-
-          fillSymbol = new SimpleFillSymbol({
-            color: [227, 40, 79, 0.8],
-            outline: { // autocasts as new SimpleLineSymbol()
-              color: [255, 255, 255],
-              width: 1
-            }
-          });
-
         
-        var markerRingsGraphic = new Graphic({
-          geometry: markerRings,
-          symbol: fillSymbol
-        });
-
-        //add marker rings graphic to screen
-        graphicsLayer.add(markerGraphic);
-        graphicsLayer.add(markerLineGraphic);
-        graphicsLayer.add(markerRingsGraphic);
-
-
-        //write function that translates user input (lat/lon to x/y)
-        //assign start values to a map marker
-        //assign end values to a map marker
-        //place map markers
+        
+        //fix markerline and rings not showing up
         //assign start and end values to a polyline connecting points
+        document.getElementById('searchSubmit').onclick = function(event) {
+            event.preventDefault();
+            var startLat = document.getElementById('startLat').value;
+            var startLon = document.getElementById('startLon').value;
+            var endLat = document.getElementById('endLat').value;
+            var endLon = document.getElementById('endLon').value;
+            createMapMarker(startLon, startLat);
+            createMapMarker(endLon, endLat);
+        }
         
+
+        function createMapMarker(lon, lat) {
+            createMarkerPoint(lon, lat);
+            createMarkerLine(lon, lat);
+            createMarkerRings(lon, lat);
+        }
+
+        //create map point
+        function createMarkerPoint(lon, lat) {
+            var point = new Point({
+                    x: lon,
+                    y: lat,
+                    z: 1010
+            }),
+
+            pointSymbol = new SimpleMarkerSymbol({
+                color: [226, 40, 40],
+                outline: {
+                    color: [255, 255, 255],
+                    width: 5
+                }
+            });
+
+            var pointGraphic = new Graphic({
+                geometry: point,
+                symbol: pointSymbol
+            });
+
+            graphicsLayer.add(pointGraphic);
+        }
+
+        //create map line
+        function createMarkerLine(lon, lat) {
+
+            var markerLine = new Polyline([
+                [lon, lat, 0],
+                [lon, lat, 1000]
+            ]),
+
+            markerLineSymbol = new SimpleLineSymbol({
+                color: [226, 40, 40],
+                width: 10
+            });
+
+            var markerLineGraphic = new Graphic({
+                geometry: markerLine,
+                symbol: markerLineSymbol
+            });
+
+            graphicsLayer.add(markerLineGraphic);
+        }
+       
+       //create map rings  -0.178, 51.48791
+        function createMarkerRings(lon, lat) {
+            var xOffsetTop = lon - .006;
+            var xOffsetBottom = lon + .006;
+            var yOffsetTop = lat - .004;
+            var yOffsetBottom = lat + .003;
+            var markerRings = new Polygon({
+                rings: [
+                    [
+                        [xOffsetTop, yOffsetTop, 400],
+                        [xOffsetTop, yOffsetBottom, 500],
+                        [xOffsetBottom, yOffsetBottom, 500],
+                        [xOffsetBottom, yOffsetTop, 400],
+                        [xOffsetTop, yOffsetTop, 400]
+                    ], 
+                    [
+                        [xOffsetTop, yOffsetTop, 200],
+                        [xOffsetTop, yOffsetBottom, 300],
+                        [xOffsetBottom, yOffsetBottom, 300],
+                        [xOffsetBottom, yOffsetTop, 200],
+                        [xOffsetTop, yOffsetTop, 200]
+                    ],
+                    [
+                        [xOffsetTop, yOffsetTop, 600],
+                        [xOffsetTop, yOffsetBottom, 700],
+                        [xOffsetBottom, yOffsetBottom, 700],
+                        [xOffsetBottom, yOffsetTop, 600],
+                        [xOffsetTop, yOffsetTop, 600]
+                    ]
+                ]
+            }),
+
+            fillSymbol = new SimpleFillSymbol({
+                color: [227, 40, 79, 0.8],
+                outline: { // autocasts as new SimpleLineSymbol()
+                color: [255, 255, 255],
+                width: 1
+                }
+            });
+
+            var markerRingsGraphic = new Graphic({
+                geometry: markerRings,
+                symbol: fillSymbol
+            });
+
+            graphicsLayer.add(markerRingsGraphic);
+        }
+
     
 });
 
